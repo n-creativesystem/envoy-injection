@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  k8s-injection-dev:
+    build: .devcontainer
+    tty: true
+    container_name: k8s-injection-dev
+    volumes:
+      - .:/src/:delegated
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.ssh:/home/user/.ssh
+      - ~/.gitconfig:/home/user/.gitconfig
+    environment:
+      TZ: Asia/Tokyo
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

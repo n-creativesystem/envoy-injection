@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: controller-manager
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - command:
+            - /kubernetes-extensions
+            - controllers
+            - namespace-cert-generator
+          args:
+            - --leader-elect
+          image: controller-manager
+          name: controller-manager
+          imagePullPolicy: Never
+          securityContext:
+            allowPrivilegeEscalation: false
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+      serviceAccountName: controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: certificate-injector
+  namespace: default
+  labels:
+    app: certificate-injector
+spec:
+  selector:
+    matchLabels:
+      app: certificate-injector
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: certificate-injector
+    spec:
+      containers:
+        - name: certificate-injector
+          image: certificate-injector
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /_status/healthz
+              port: 80
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 10
+          env:
+            - name: APP_ENV
+              value: PRODUCTION
+          ports:
+            - containerPort: 8080
+      restartPolicy: Always

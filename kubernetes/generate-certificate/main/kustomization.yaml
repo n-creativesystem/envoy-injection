@@ -1,0 +1,11 @@
+namespace: manager
+bases:
+  - "../base"
+resources:
+  - namespace.yaml
+images:
+  - name: controller-manager
+    newName: kubernetes-extensions
+    newTag: v0.0.3
+patches:
+  - deployment.yaml
