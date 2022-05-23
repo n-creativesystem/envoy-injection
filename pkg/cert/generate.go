@@ -18,6 +18,37 @@ var (
 	SubjectIssuer = "k8s"
 )
 
+type After struct {
+	year  int
+	month int
+	day   int
+}
+
+func NewAfter(year, month, day int) After {
+	return After{
+		year:  year,
+		month: month,
+		day:   day,
+	}
+}
+
+func (a After) AfterDate(before time.Time) time.Time {
+	return before.AddDate(a.year, a.month, a.day)
+}
+
+type CryptographyType int
+
+const (
+	RSA CryptographyType = iota
+	ECDSA
+)
+
+type CertificateConfig struct {
+	CryptographyType CryptographyType
+	Bits             int
+	After            After
+}
+
 type Certificate struct {
 	Private     []byte
 	Certificate []byte

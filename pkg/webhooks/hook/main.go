@@ -13,6 +13,7 @@ import (
 
 	"github.com/n-creativesystem/kubernetes-extensions/pkg/cert"
 	"github.com/n-creativesystem/kubernetes-extensions/pkg/config"
+	"github.com/n-creativesystem/kubernetes-extensions/pkg/helper"
 	"github.com/n-creativesystem/kubernetes-extensions/pkg/logger"
 	webhookhttp "github.com/slok/kubewebhook/pkg/http"
 	"github.com/slok/kubewebhook/pkg/webhook/mutating"
@@ -41,7 +42,7 @@ func StartServer(ctx context.Context, hook Webhook) error {
 		return err
 	}
 
-	listen, err := net.Listen("tcp", ":8080")
+	listen, err := net.Listen("tcp", ":8443")
 	if err != nil {
 		return fmt.Errorf("Error to create listen: %s", err)
 	}
@@ -75,6 +76,9 @@ func StartServer(ctx context.Context, hook Webhook) error {
 		mux.Handle("/validate", handler)
 	}
 
+	mux.Handle("/healthz", helper.HealthCheck)
+	mux.Handle("/readyz", helper.HealthCheck)
+
 	server := &http.Server{
 		Handler: mux,
 		TLSConfig: &tls.Config{
@@ -102,7 +106,7 @@ func StartServer(ctx context.Context, hook Webhook) error {
 		}
 	}()
 
-	logger.Infof("start server on :8080")
+	logger.Infof("start server on :8443")
 	if err := server.ServeTLS(listen, config.WebhookConfig.CertFile, config.WebhookConfig.KeyFile); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("Error to start server: %s", err)
 	}

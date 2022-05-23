@@ -2,6 +2,7 @@ package certificate
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/n-creativesystem/kubernetes-extensions/pkg/helper"
 	"github.com/n-creativesystem/kubernetes-extensions/pkg/logger"
@@ -36,7 +37,7 @@ func (w *WebHook) mutation(ctx context.Context, obj metav1.Object) (bool, error)
 	if !ok {
 		return false, nil
 	}
-	logger.Debugf("dep: %#v", dep)
+	logger.Debugf(fmt.Sprintf("dep: %#v", dep))
 	helper := helper.NewAnnotationHelper(dep.Annotations)
 	if !helper.IsEnabled() {
 		return false, nil
